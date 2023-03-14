@@ -5,7 +5,7 @@
 ------------------------------------------------------------------------------
 -- Contains functions that allow for a new mechanic, taunting, that changes vek attacks to a new tile
 --
--- For use, add the following lines to the beginning of any file that uses taunt, and then make sure you've got LApi in your mod
+-- For use, add the following lines to the beginning of any file that uses taunt, and then make sure you've got modApiExt and memedit enabled
 -- Place the taunt folder in your scripts folder
 --[[
 
@@ -17,7 +17,7 @@ local taunt = require(scriptPath.."taunt/taunt")
 --
 ------------------------------------------------------------------------------
 -- DEPENDENCIES:
--- LApi - Make sure you have LApi in your mod, and follow it's directions, adding : "require(self.scriptPath.."LApi/LApi")" : into your init
+-- memedit + modApiExt: Add them as dependencies to your mod, with the modloader
 
 --[[ Documentation and Notes
 Note: Custom Tooltips are neccesary for working tooltips unfortunately, espeically if damage is being done
@@ -25,7 +25,8 @@ Note: If you want to do damage on the taunted tile, you MUST pass it into the fu
 the icons will get overridden by the damage icons. Sorry for any inconvinences this causes. You may still
 add a zero damage SpaceDamage to the tile.
 
-Scroll down to "Taunt Functions" line: 206 for documentation on the functions you'll be using
+MORE DOCUMENTATION
+Scroll down to "Taunt Functions" line: 194ish for documentation on the functions you'll be using
 ]]--
 
 taunt = {}
