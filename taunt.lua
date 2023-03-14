@@ -92,33 +92,28 @@ local function isEnemyPawn(pawn)
     return pawn:GetTeam() == TEAM_ENEMY
 end
 
-local function isGastropod(pawn)
+local function isVek(pawn,type)
 	local name = pawn:GetType()
-	return name == "Burnbug1" or name == "Burnbug2" or name == "BurnbugBoss" -- in case there is one
-end
-
-local function isMoth(pawn)
-	local name = pawn:GetType()
-	return name == "Moth1" or name == "Moth2" or name == "MothBoss" -- in case there is one
-end
-
-local function isSpore(pawn)
-	local name = pawn:GetType()
-	return name == "Totem1" or name == "Totem2" or name == "TotemB"
-end
-
-local function isTumblebug(pawn) --opposite reason: is ranged and shouln't be
-	local name = pawn:GetType()
-	return name == "Dung1" or name == "Dung2" or name == "DungBoss"
+	return name == type.."1" or name == type.."2" or name == type.."Boss"
 end
 
 local function isBot(pawn) --Because all bots are not ranged despite all having ranged attacks
 	local name = pawn:GetType() --Using get type instead which pulls from easy to read
-	return name == "Snowtank1" or name == "Snowtank2" or name == "Snowart1" or name == "Snowart2" or name == "Snowlaser1" or name == "Snowlaser2" or name == "BotBoss" or name == "BotBoss2" or name == "Snowtank1_Boom" or name == "Snowlaser1_Boom" or name == "Snowart1_Boom"
+	return isVek(pawn,"Snowtank") or isVek(pawn,"Snowart") or isVek(pawn,"Snowlaser") or name == "BotBoss" or name == "BotBoss2" or name == "Snowtank1_Boom" or name == "Snowlaser1_Boom" or name == "Snowart1_Boom"
 end
 
 local function isRanged(pawn)
-	return (pawn:IsRanged() and not pawn:IsJumper() and not isTumblebug(pawn)) or isGastropod(pawn) or isMoth(pawn) or isSpore(pawn) or isBot(pawn)
+	local ranged = {
+		"Burnbug", --Gastropod
+		"Moth",
+		"Totem", --Spore
+	}
+	for _, vek in ipairs(ranged) do
+		if isVek(pawn,vek) then
+			return true
+		end
+	end
+	return (pawn:IsRanged() and not pawn:IsJumper() and not isVek(pawn,"Dung")) or isBot(pawn)
 end
 
 local function canTargetHornet(distance, target, pawn) --This is now all enemies with 2 or more range that are still melee.
@@ -126,11 +121,6 @@ local function canTargetHornet(distance, target, pawn) --This is now all enemies
 	if space.x ~= target.x and space.y ~= space.y then return false end
 	local dist = target:Manhattan(space)
 	return dist <= distance
-end
-
-local function isSpringseed(pawn)
-	local name = pawn:GetType()
-	return name == "lmn_Springseed1" or name == "lmn_Springseed2"
 end
 
 local function canTargetSpringseed(target, pawn)
@@ -147,7 +137,7 @@ local function canTargetNewPoint(pawn, target)
 		return canTargetHornet(2, target, pawn)
 	elseif name == "HornetBoss" or name == "lmn_KnightBot" or name == "lmn_ChomperBoss" or name == "lmn_ChiliBoss" then --Hornet Leader + Knight Bots with 3 range + Chomper Boss with 3 range + chili boss with 3 range
 		return canTargetHornet(3, target, pawn)
-	elseif isSpringseed(pawn) then --Springseed with essentially a melee attack, but its target area is two
+	elseif isVek(pawn,"lmn_Springseed") then --Springseed with essentially a melee attack, but its target area is two
 		return canTargetSpringseed(target, pawn)
 	elseif name == "lmn_Cactus1" or name == "lmn_Cactus2" or name == "lmn_SpringseedBoss" then
 		return false --Cactus always retargets to nearest enemy, so you can't taunt it. Also springseed boss is chaos hell to the no
@@ -230,7 +220,7 @@ function taunt.enemy(id, point)
 		local dir = GetDirection(point - loc)
 		local newtarget = loc + DIR_VECTORS[dir] * dist
 		pawn:SetQueuedTarget(newtarget)
-	elseif isSpringseed(pawn) then --Springseed
+	elseif isVek(pawn,"lmn_Springseed") then --Springseed
 		local dir = GetDirection(point - loc)
 		local newtarget = loc + DIR_VECTORS[dir] * 2
 		pawn:SetQueuedTarget(newtarget)
