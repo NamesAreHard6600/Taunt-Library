@@ -108,11 +108,18 @@ local function isRanged(pawn)
 		"Burnbug", --Gastropod
 		"Moth",
 		"Totem", --Spore
+		"DNT_Ladybug", --Vextra
+		"DNT_Silkworm", --Vextra
 	}
 	for _, vek in ipairs(ranged) do
 		if isVek(pawn,vek) then
 			return true
 		end
+	end
+	local mission = GetCurrentMission()
+	--Junebug: Only ranged when ladybug is dead
+	if mission and isVek(pawn,"DNT_Junebug") and mission.DNT_LadybugID and not Board:IsPawnAlive(mission.DNT_LadybugID) then
+		return true
 	end
 	return (pawn:IsRanged() and not pawn:IsJumper() and not isVek(pawn,"Dung")) or isBot(pawn)
 end
@@ -130,26 +137,33 @@ local function canTargetSpringseed(target, pawn)
 	return dist == 1
 end
 
+local function canTargetDragonfly(target,pawn)
+	local space = pawn:GetSpace()
+	local dist = target:Manhattan(space)
+	return dist < 4 and dist > 1
+end
+
 --Check if the the target is actually in the GetTargetArea of the enemy, as well as more for unique situations
 local function canTargetNewPoint(pawn, target)
 	--Hornets and modded vek exceptions
 	local name = pawn:GetType()
 	if name == "Hornet2" or name == "lmn_Chomper1" or name == "lmn_Chomper2" or name == "lmn_Chili1" or name == "lmn_Chili2" then --Hornet and chompers with 2 range and chilis
 		return canTargetHornet(2, target, pawn)
-	elseif name == "HornetBoss" or name == "lmn_KnightBot" or name == "lmn_ChomperBoss" or name == "lmn_ChiliBoss" then --Hornet Leader + Knight Bots with 3 range + Chomper Boss with 3 range + chili boss with 3 range
+	elseif name == "HornetBoss" or name == "lmn_KnightBot" or name == "lmn_ChomperBoss" or name == "lmn_ChiliBoss" or isVek(pawn,"DNT_IceCrawler") then --Hornet Leader + Knight Bots with 3 range + Chomper Boss with 3 range + chili boss with 3 range + Ice Crawlers with 3 range
 		return canTargetHornet(3, target, pawn)
 	elseif isVek(pawn,"lmn_Springseed") then --Springseed with essentially a melee attack, but its target area is two
 		return canTargetSpringseed(target, pawn)
-	elseif name == "lmn_Cactus1" or name == "lmn_Cactus2" or name == "lmn_SpringseedBoss" then
-		return false --Cactus always retargets to nearest enemy, so you can't taunt it. Also springseed boss is chaos hell to the no
+	elseif name == "DNT_DragonflyBoss" then --Dragonfly Boss has 3 range arty
+		return canTargetDragonfly(target,pawn)
+	elseif name == "lmn_Cactus1" or name == "lmn_Cactus2" or name == "lmn_SpringseedBoss" or isVek(pawn,"DNT_Mantis") then
+		return false --Cactus always retargets to nearest enemy, so you can't taunt it. Also springseed boss is chaos hell to the no. And mantis is diagonal
 	end
 	--Other Ranged
-    if isRanged(pawn) then
+  if isRanged(pawn) then
 		local id = pawn:GetId()
 		local loc = pawn:GetSpace()
-		local cutils = _G["cutils-dll"]
 		local point = pawn:GetQueuedTarget()
-		local dist = loc:Manhattan(point) --Artillery should honestly revert back to the in target area thing```
+		local dist = loc:Manhattan(point) --Artillery should honestly revert back to the in target area thing. Too late now. (not sure why I didn't do this)
 		if dist > 1 then --Artillery Vek
 			dist = loc:Manhattan(target)
 			if dist > 5 or dist == 1 then return false end --Out of the artillery's range
@@ -182,12 +196,11 @@ end
 --Checks if the enemy can be taunted by the given point
 local function canBeTauntedByPoint(pawn, point)
 	local id = pawn:GetId()
-	local cutils = _G["cutils-dll"]
 	local space = pawn:GetSpace()
 
 	local target = pawn:GetQueuedTarget()
 	if target == Point(-1, -1) or target == point or target == space then return false end -- The enemy has a target, the target doesn't equal the current space trying to be taunted, and the target is attacking its own space (digger, scorp leader, etc.)
-   return canTargetNewPoint(pawn, point)-- and not target == point and not target == Point(-1,-1)
+  return canTargetNewPoint(pawn, point)-- and not target == point and not target == Point(-1,-1)
 end
 
 
@@ -205,9 +218,8 @@ function taunt.enemy(id, point)
 	if Board == nil then return end
 
 	local pawn = Board:GetPawn(id)
-    if IsTipImage() or pawn == nil or not isEnemyPawn(pawn) or not canBeTauntedByPoint(pawn, point) then return end
+  if IsTipImage() or pawn == nil or not isEnemyPawn(pawn) or not canBeTauntedByPoint(pawn, point) then return end
 
-	local cutils = _G["cutils-dll"]
 	local loc = pawn:GetSpace()
 
 	local target = pawn:GetQueuedTarget()
@@ -285,7 +297,7 @@ end
   Note: The pawn version has the disadvantage of not adding the fail icon if there is invalid enemy id given, while this function will.
 
   @param effect	the SkillEffect Object to add to.
-  @param pawn		the id
+  @param space		the space to trigger the effect on
   @param point		the new point for the pawn to target
   @param dmg[opt=0] the damage to do to the taunted point (if you do this outside, the icon will be overridden)
 ]]
