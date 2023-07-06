@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 -- Taunt Library
--- v2.0.0
--- By: NamesAreHard (NamesAreHard#2501) and Turelch (Truelch#4266)
+-- v2.0.1
+-- By: NamesAreHard (NamesAreHard#2501) and Truelch (Truelch#4266)
 ------------------------------------------------------------------------------
 -- Contains functions that allow for a new mechanic, taunting, that changes vek attacks to a new tile
 --
@@ -199,7 +199,7 @@ local function canBeTauntedByPoint(pawn, point)
 	local space = pawn:GetSpace()
 
 	local target = pawn:GetQueuedTarget()
-	if target == Point(-1, -1) or target == point or target == space then return false end -- The enemy has a target, the target doesn't equal the current space trying to be taunted, and the target is attacking its own space (digger, scorp leader, etc.)
+	if target == Point(-1, -1) or target == space then return false end -- The enemy has a target, the target doesn't equal the current space trying to be taunted, and the target is attacking its own space (digger, scorp leader, etc.)
   return canTargetNewPoint(pawn, point)-- and not target == point and not target == Point(-1,-1)
 end
 
@@ -253,10 +253,12 @@ end
   @param pawn		the id
   @param point		the new point for the pawn to target
   @param dmg[opt=0] the damage to do to the taunted point (if you do this outside, the icon will be overridden)
+  @param failFlag[opt=false] If true, if the taunt fails, it no longer does damage
 ]]
 
-function taunt.addTauntEffectEnemy(effect, id, point, dmg)
+function taunt.addTauntEffectEnemy(effect, id, point, dmg, failFlag)
 	dmg = dmg or 0
+	failFlag = failFlag or false
 	if Board == nil or IsTipImage() then return end
 	local pawn = Board:GetPawn(id)
 	if pawn == nil or not isEnemyPawn(pawn) then return end
@@ -284,7 +286,9 @@ function taunt.addTauntEffectEnemy(effect, id, point, dmg)
 		effect:AddScript(string.format("Board:GetPawn(%s):SetSpace(%s)", id, loc:GetString()))
 	else
 		damage.sImageMark = "combat/icons/tauntFailIcon_"..tostring(dir)..".png"
-		if dmg > 0 then
+		if failFlag then
+			damage.iDamage = 0
+		elseif dmg > 0 then
 			damage.sImageMark = "combat/icons/tauntFailIcon_"..tostring(dir).."_d.png"
 		end
 	end
@@ -300,23 +304,27 @@ end
   @param space		the space to trigger the effect on
   @param point		the new point for the pawn to target
   @param dmg[opt=0] the damage to do to the taunted point (if you do this outside, the icon will be overridden)
+  @param failFlag[opt=false] If true, if the taunt fails, it no longer does damage
 ]]
-function taunt.addTauntEffectSpace(effect, space, point, dmg)
+function taunt.addTauntEffectSpace(effect, space, point, dmg, failFlag)
 	dmg = dmg or 0
+	failFlag = failFlag or false
 	if Board == nil or IsTipImage() then return end
 	local pawn = Board:GetPawn(space)
 	if pawn == nil or not isEnemyPawn(pawn) then
 		local dir = GetDirection(point - space)
 		local damage = SpaceDamage(space,dmg)
 		damage.sImageMark = "combat/icons/tauntFailIcon_"..tostring(dir)..".png"
-		if dmg > 0 then
+		if failFlag then
+			damage.iDamage = 0
+		elseif dmg > 0 then
 			damage.sImageMark = "combat/icons/tauntFailIcon_"..tostring(dir).."_d.png"
 		end
 		effect:AddDamage(damage)
 		return
 	end
 	local id = pawn:GetId()
-	taunt.addTauntEffectEnemy(effect,id,point,dmg)
+	taunt.addTauntEffectEnemy(effect,id,point,dmg,failFlag)
 end
 
 return taunt

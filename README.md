@@ -1,4 +1,4 @@
-## Into the Breach Library: Taunt - Version: 2.0.0 - By: NamesAreHard and Truelch
+## Into the Breach Library: Taunt - Version: 2.0.1 - By: NamesAreHard and Truelch
 Contact me on discord via the Into The Breach server or @NamesAreHard#2501 for bug reports or questions
 Contact Truelch via the Into The Breach or at @Truelch#4266 for art issues
 
@@ -32,7 +32,7 @@ dependencies = {
  @param pawn		the id <br>
  @param point		the new point for the pawn to target <br>
  @param dmg[opt=0] the damage to do to the taunted point (if you do this outside, the icon will be overridden) <br>
-
+ @param failFlag[opt=false] If true, if the taunt fails, it no longer does damage
  
  ### `taunt.addTauntEffectSpace(SkillEffect effect, Point space, Point point, int dmg)`
  Adds a taunt to the Skill Effect object given, when given a space:
@@ -44,3 +44,4 @@ dependencies = {
  @param space		the space to trigger the effect on <br>
  @param point		the new point for the pawn to target <br>
  @param dmg[opt=0] the damage to do to the taunted point (if you do this outside, the icon will be overridden) <br>
+ @param failFlag[opt=false] If true, if the taunt fails, it no longer does damage
