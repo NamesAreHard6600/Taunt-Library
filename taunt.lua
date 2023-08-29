@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------------
 -- Taunt Library
--- v2.0.1
+-- v2.0.2
 -- By: NamesAreHard (NamesAreHard#2501) and Truelch (Truelch#4266)
 ------------------------------------------------------------------------------
 -- Contains functions that allow for a new mechanic, taunting, that changes vek attacks to a new tile
@@ -254,9 +254,12 @@ end
   @param point		the new point for the pawn to target
   @param dmg[opt=0] the damage to do to the taunted point (if you do this outside, the icon will be overridden)
   @param failFlag[opt=false] If true, if the taunt fails, it no longer does damage
+  @return returns a bool: true if the taunt is successful and false if it is not
 ]]
 
 function taunt.addTauntEffectEnemy(effect, id, point, dmg, failFlag)
+	local ret = false
+
 	dmg = dmg or 0
 	failFlag = failFlag or false
 	if Board == nil or IsTipImage() then return end
@@ -284,6 +287,8 @@ function taunt.addTauntEffectEnemy(effect, id, point, dmg, failFlag)
 		effect:AddScript(string.format("Board:GetPawn(%s):SetSpace(Point(-1,-1))", id))
 		effect:AddDelay(0.016)
 		effect:AddScript(string.format("Board:GetPawn(%s):SetSpace(%s)", id, loc:GetString()))
+
+		ret = true
 	else
 		damage.sImageMark = "combat/icons/tauntFailIcon_"..tostring(dir)..".png"
 		if failFlag then
@@ -291,8 +296,11 @@ function taunt.addTauntEffectEnemy(effect, id, point, dmg, failFlag)
 		elseif dmg > 0 then
 			damage.sImageMark = "combat/icons/tauntFailIcon_"..tostring(dir).."_d.png"
 		end
+
+		ret = false
 	end
 	effect:AddDamage(damage)
+	return ret
 end
 
 --[[
@@ -305,6 +313,7 @@ end
   @param point		the new point for the pawn to target
   @param dmg[opt=0] the damage to do to the taunted point (if you do this outside, the icon will be overridden)
   @param failFlag[opt=false] If true, if the taunt fails, it no longer does damage
+  @return returns a bool: true if the taunt is successful and false if it is not
 ]]
 function taunt.addTauntEffectSpace(effect, space, point, dmg, failFlag)
 	dmg = dmg or 0
@@ -321,10 +330,10 @@ function taunt.addTauntEffectSpace(effect, space, point, dmg, failFlag)
 			damage.sImageMark = "combat/icons/tauntFailIcon_"..tostring(dir).."_d.png"
 		end
 		effect:AddDamage(damage)
-		return
+		return false
 	end
 	local id = pawn:GetId()
-	taunt.addTauntEffectEnemy(effect,id,point,dmg,failFlag)
+	return taunt.addTauntEffectEnemy(effect,id,point,dmg,failFlag)
 end
 
 return taunt
